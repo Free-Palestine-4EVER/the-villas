@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { sendBookingEmail } from "../actions/send-email"
 
 // Villa prices
 const VILLA_PRICES = {
@@ -130,23 +129,41 @@ export default function ContactUsPage() {
     e.preventDefault()
     console.log("Form submitted", formState)
     setIsSubmitting(true)
+    setResponseMessage("Processing your booking request...")
 
     try {
-      // Prepare data for submission
-      const selectedExperience = EXPERIENCES.find((exp) => exp.name === formState.experience)
+      // Check if at least one villa is selected
+      if (!hasSelectedVilla) {
+        setResponseMessage("Please select at least one room to continue")
+        setIsSubmitting(false)
+        return
+      }
 
-      const result = await sendBookingEmail({
-        ...formState,
-        experiencePrice: experiencePrice,
-        totalPrice: totalPrice,
+      // Use fetch to call the API route instead of the server action
+      const response = await fetch("/api/booking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formState,
+          totalPrice: totalPrice,
+        }),
       })
 
-      console.log("Email result:", result)
-      setResponseMessage(result.message)
-      setIsSubmitted(result.success)
+      const result = await response.json()
+      console.log("API response:", result)
+
+      if (response.ok) {
+        setResponseMessage(result.message)
+        setIsSubmitted(true)
+      } else {
+        setResponseMessage(result.message || "Failed to send booking request. Please try again later.")
+      }
     } catch (error) {
       console.error("Submission error:", error)
-      setResponseMessage("Failed to send booking request. Please try again later.")
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      setResponseMessage(`Failed to send booking request. Error: ${errorMessage}`)
     } finally {
       setIsSubmitting(false)
     }
