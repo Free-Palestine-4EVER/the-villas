@@ -44,7 +44,7 @@ export async function sendBookingEmail(formData: BookingFormData) {
     console.log("Sending email to resort")
     try {
       const { data, error } = await resend.emails.send({
-        from: "The Villas Bedouin Resort <onboarding@resend.dev>",
+        from: "Resend <onboarding@resend.dev>", // Using Resend's default domain
         to: ["thevillaswr@gmail.com"],
         subject: `New Booking Request from ${formData.name}`,
         html: `
@@ -83,7 +83,7 @@ export async function sendBookingEmail(formData: BookingFormData) {
     console.log("Sending confirmation email copy to resort owner")
     try {
       await resend.emails.send({
-        from: "The Villas Bedouin Resort <onboarding@resend.dev>",
+        from: "Resend <onboarding@resend.dev>", // Using Resend's default domain
         to: ["thevillaswr@gmail.com"],
         subject: `COPY - Confirmation for ${formData.name} (${formData.email})`,
         html: `
