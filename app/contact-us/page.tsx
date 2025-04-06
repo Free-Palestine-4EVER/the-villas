@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { sendBookingEmail } from "../actions/send-email"
 
 // Villa prices
 const VILLA_PRICES = {
@@ -139,27 +140,15 @@ export default function ContactUsPage() {
         return
       }
 
-      // Use fetch to call the API route instead of the server action
-      const response = await fetch("/api/booking", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formState,
-          totalPrice: totalPrice,
-        }),
+      // Prepare data for submission
+      const result = await sendBookingEmail({
+        ...formState,
+        totalPrice: totalPrice,
       })
 
-      const result = await response.json()
-      console.log("API response:", result)
-
-      if (response.ok) {
-        setResponseMessage(result.message)
-        setIsSubmitted(true)
-      } else {
-        setResponseMessage(result.message || "Failed to send booking request. Please try again later.")
-      }
+      console.log("Email result:", result)
+      setResponseMessage(result.message)
+      setIsSubmitted(result.success)
     } catch (error) {
       console.error("Submission error:", error)
       const errorMessage = error instanceof Error ? error.message : String(error)

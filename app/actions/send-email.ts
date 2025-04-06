@@ -42,11 +42,12 @@ export async function sendBookingEmail(formData: BookingFormData) {
 
     // Send email to resort with customer information
     console.log("Sending email to resort")
-    const { data, error } = await resend.emails.send({
-      from: "The Villas Bedouin Resort <onboarding@resend.dev>",
-      to: ["thevillaswr@gmail.com"],
-      subject: `New Booking Request from ${formData.name}`,
-      html: `
+    try {
+      const { data, error } = await resend.emails.send({
+        from: "The Villas Bedouin Resort <onboarding@resend.dev>",
+        to: ["thevillaswr@gmail.com"],
+        subject: `New Booking Request from ${formData.name}`,
+        html: `
 <h1>New Booking Request</h1>
 <p><strong>Name:</strong> ${formData.name}</p>
 <p><strong>Email:</strong> ${formData.email}</p>
@@ -56,18 +57,25 @@ export async function sendBookingEmail(formData: BookingFormData) {
 <p><strong>Number of Guests:</strong> ${formData.guests}</p>
 <p><strong>Accommodation:</strong> ${villasBooked.join(", ")}</p>
 <p><strong>Experiences:</strong> ${
-        formData.experiences.length > 0
-          ? formData.experiences.map((exp) => `${exp.name} (${exp.price} JOD per person)`).join(", ")
-          : "None"
-      }</p>
+          formData.experiences.length > 0
+            ? formData.experiences.map((exp) => `${exp.name} (${exp.price} JOD per person)`).join(", ")
+            : "None"
+        }</p>
 <p><strong>Special Requests:</strong> ${formData.message}</p>
 <p><strong>Total Price:</strong> ${formData.totalPrice} JOD</p>
 `,
-    })
+      })
 
-    if (error) {
-      console.error("Error sending email to resort:", error)
-      return { success: false, message: error.message }
+      if (error) {
+        console.error("Error sending email to resort:", error)
+        return { success: false, message: `Error sending email: ${error.message}` }
+      }
+    } catch (emailError) {
+      console.error("Exception sending main email:", emailError)
+      return {
+        success: false,
+        message: `Exception sending email: ${emailError instanceof Error ? emailError.message : String(emailError)}`,
+      }
     }
 
     // Send a copy of the confirmation email to the resort owner
@@ -112,7 +120,10 @@ export async function sendBookingEmail(formData: BookingFormData) {
     }
   } catch (error) {
     console.error("Error in sendBookingEmail:", error)
-    return { success: false, message: "Failed to send booking request. Please try again later." }
+    return {
+      success: false,
+      message: `Failed to send booking request. Error: ${error instanceof Error ? error.message : String(error)}`,
+    }
   }
 }
 
